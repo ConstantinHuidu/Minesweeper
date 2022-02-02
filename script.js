@@ -11,7 +11,7 @@ function play(btn) {
     if (id == "easy") {
         lines = 10;
         columns = 10;
-        numberOfMines = 3;
+        numberOfMines = 10;
     } else if (id =="pro") {
         lines = 20;
         columns = 20;
@@ -31,11 +31,8 @@ function generateBoard(lines, columns) {
             var cell = line.insertCell(j);
             var currentTile = gameboard.rows[i].cells[j];
             currentTile.classList.add("uncovered");
-            //removes right click pop-up for the gameboard area only
-            gameboard.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-            })
             currentTile.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
                 if (gameActive) {
                     flagTile(gameboard, i, j);
                 }
@@ -55,12 +52,10 @@ function flagTile(gameboard, i , j) {
     var currentTile = gameboard.rows[i].cells[j];
     //removes flag of an already flagged tile
     if (currentTile.classList.contains('markedMine')) {
-        currentTile.classList.remove('markedMine');
-        currentTile.classList.add("uncovered");
+        currentTile.classList.replace('markedMine', 'uncovered');
         currentTile.innerHTML = "";
     } else if (!currentTile.classList.contains('markedMine') && !currentTile.classList.contains('gamecells')) {  //adds flag
-        currentTile.classList.remove("uncovered");
-        currentTile.classList.add('markedMine');
+        currentTile.classList.replace('uncovered', 'markedMine');
         currentTile.innerHTML = "<img src=\"flag.png\">";
     }
 }
@@ -68,17 +63,19 @@ function flagTile(gameboard, i , j) {
 //reveals cell on click
 function revealTile(gameboard, i , j) {
     var currentTile = gameboard.rows[i].cells[j];
-    if (!currentTile.classList.contains("markedMine") && !currentTile.classList.contains('gamecells')) {
-        currentTile.classList.remove("uncovered");
-        currentTile.classList.add('gamecells');
+    if (!currentTile.classList.contains('markedMine') && !currentTile.classList.contains('gamecells')) {
+        currentTile.classList.replace('uncovered', 'gamecells');
         if (currentTile.count != 0) {
             currentTile.innerHTML = currentTile.count;
         } else if (currentTile.count == 0) {
             currentTile.innerHTML = "";
             showAllEmpty(gameboard, i, j);
         }
-        isGameWon(gameboard);
-        isGameLost(gameboard, i, j);
+        if (isGameOver(gameboard, i, j)) {
+            showMines(gameboard);
+            clearInterval(interval); // timer stops
+            gameActive = false;
+        }
     }
 }
 
@@ -90,15 +87,13 @@ function generateMines(gameboard, i , j) {
         var mineRandomPositionY = Math.floor(Math.random() * columns);
         if (!gameboard.rows[mineRandomPositionX].cells[mineRandomPositionY].classList.contains("mine")) {
             gameboard.rows[mineRandomPositionX].cells[mineRandomPositionY].classList.add("mine");
-            gameboard.rows[mineRandomPositionX].cells[mineRandomPositionY].classList.remove("gamecells");
             --mines;
         }
     }
     nearbyMines(gameboard, i, j)
 }
 
-//check if game is won
-function isGameWon(gameboard) {
+function isGameOver(gameboard, i, j) {
     var flippedTiles = 0;
     for (let line = 0; line < lines; ++line) {
         for (let column = 0; column < columns; ++column) {
@@ -109,21 +104,10 @@ function isGameWon(gameboard) {
     }
     if (lines * columns - flippedTiles === numberOfMines) {
         gameWon.innerHTML = "Game Won";
-        showMines(gameboard);
-        clearInterval(interval); // timer stops
-        gameActive = false;
         return true;
     }
-}
-
-//checks for mine and if mine found --> uncover all mines
-function isGameLost(gameboard, i, j) {
     if (gameboard.rows[i].cells[j].classList.contains("mine")) {
         gameStatus.innerHTML = "Game Over";
-        clearInterval(interval); // timer stops
-        //search for all mines and uncover them
-        showMines(gameboard);
-        gameActive = false;
         return true;
     }
 }
@@ -133,8 +117,7 @@ function showMines(gameboard) {
     for (let line = 0; line < lines; ++line) {
         for (let column = 0; column < columns; ++column) {
             if (gameboard.rows[line].cells[column].classList.contains("mine")) {
-                gameboard.rows[line].cells[column].classList.remove("uncovered");
-                gameboard.rows[line].cells[column].classList.remove("markedMine");
+                gameboard.rows[line].cells[column].classList.remove("uncovered", "markedMine");
                 gameboard.rows[line].cells[column].innerHTML = "<img src=\"bomb.png\">";
             }
         }
@@ -168,13 +151,11 @@ function showAllEmpty(gameboard, i, j) {
         for (let y = j - 1; y <= j + 1; ++y) {
             if (x >= 0 && x < lines && y >= 0 && y < columns) {
                 if (gameboard.rows[x].cells[y].count > 0) {
-                    gameboard.rows[x].cells[y].classList.remove('uncovered');
-                    gameboard.rows[x].cells[y].classList.remove('markedMine');
+                    gameboard.rows[x].cells[y].classList.remove('uncovered', 'markedMine');
                     gameboard.rows[x].cells[y].classList.add('gamecells');
                     gameboard.rows[x].cells[y].innerHTML = gameboard.rows[x].cells[y].count;
                 } else if (gameboard.rows[x].cells[y].count == 0 && !gameboard.rows[x].cells[y].classList.contains("gamecells") && !gameboard.rows[x].cells[y].classList.contains("mine")) {
-                    gameboard.rows[x].cells[y].classList.remove('uncovered');
-                    gameboard.rows[x].cells[y].classList.remove('markedMine');
+                    gameboard.rows[x].cells[y].classList.remove('uncovered', 'markedMine');
                     gameboard.rows[x].cells[y].classList.add('gamecells');
                     gameboard.rows[x].cells[y].innerHTML = "";
                     showAllEmpty(gameboard, x, y);
