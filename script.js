@@ -149,14 +149,12 @@ function nearbyMines(gameboard, i, j) {
 function showAllEmpty(gameboard, i, j) {
     for (let x = i - 1; x <= i + 1; ++ x) {
         for (let y = j - 1; y <= j + 1; ++y) {
-            if (x >= 0 && x < lines && y >= 0 && y < columns) {
-                if (gameboard.rows[x].cells[y].count > 0) {
-                    gameboard.rows[x].cells[y].classList.remove('uncovered', 'markedMine');
-                    gameboard.rows[x].cells[y].classList.add('gamecells');
+            if (x >= 0 && x < lines && y >= 0 && y < columns && !gameboard.rows[x].cells[y].classList.contains("gamecells") && !gameboard.rows[x].cells[y].classList.contains("mine")) {
+                gameboard.rows[x].cells[y].classList.remove('uncovered', 'markedMine');
+                gameboard.rows[x].cells[y].classList.add('gamecells');
+                if (gameboard.rows[x].cells[y].count != 0) {
                     gameboard.rows[x].cells[y].innerHTML = gameboard.rows[x].cells[y].count;
-                } else if (gameboard.rows[x].cells[y].count == 0 && !gameboard.rows[x].cells[y].classList.contains("gamecells") && !gameboard.rows[x].cells[y].classList.contains("mine")) {
-                    gameboard.rows[x].cells[y].classList.remove('uncovered', 'markedMine');
-                    gameboard.rows[x].cells[y].classList.add('gamecells');
+                } else {
                     gameboard.rows[x].cells[y].innerHTML = "";
                     showAllEmpty(gameboard, x, y);
                 }
